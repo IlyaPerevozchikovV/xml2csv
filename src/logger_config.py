@@ -1,9 +1,11 @@
 import logging
 import os
+
 from datetime import datetime
 
+
 # Конфигурация логгера
-def setup_logger(log_file_name: str, file_path: str):
+def setup_logger(file_path: str):
     """
     setup_logger настраивает логгер, который собирает логи в отдельный файл для каждого XML-файла.
     Принимимает: log_file_name: Имя лог-файла для текущего процесса обработки, file_path путь, по которому
@@ -15,10 +17,10 @@ def setup_logger(log_file_name: str, file_path: str):
     os.makedirs(logs_dir, exist_ok=True)
 
     # Полный путь к лог-файлу
-    log_file_path = os.path.join(logs_dir, log_file_name)
+    log_file_path = os.path.join(logs_dir, generate_log_file_name(file_path))
 
     # Настройка логгера
-    logger = logging.getLogger(log_file_name)  # Создаем уникальный логгер для каждого файла
+    logger = logging.getLogger(generate_log_file_name(file_path))  # Создаем уникальный логгер для каждого файла
     logger.setLevel(logging.INFO)  # Устанавливаем уровень логирования
 
     # Формат записи сообщений
@@ -38,7 +40,7 @@ def setup_logger(log_file_name: str, file_path: str):
 # Генерация имени лог-файла на основе текущей даты и времени
 def generate_log_file_name(file_name: str) -> str:
     """
-    Генерирует имя лог-файла на основе имени XML-файла и текущей даты/времени.
+    Генерирует имя log-файла на основе имени XML-файла и текущей даты/времени.
     """
     base_name = os.path.splitext(os.path.basename(file_name))[0]
     file_datetime = datetime.now().strftime('%m.%d.%Y')

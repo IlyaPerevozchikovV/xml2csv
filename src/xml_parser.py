@@ -6,7 +6,6 @@ from datetime import datetime
 
 def parse_xml(file_path, logger):
     data = []
-    issues = []
     encoding = None
 
     try:
@@ -14,15 +13,15 @@ def parse_xml(file_path, logger):
         # но в данном случае необходимо установить кодировку (по умолчанию utf-8) поэтому указываем
         parser = XMLParser(encoding='windows-1251')
 
-        with open(file_path, 'rb') as file:                    #'rb', так как необходима работа с кодировкой файла
-            tree = parse(file, parser)                         # Получаем структуру XML-файла в виде "дерева"
-            root = tree.getroot()                              # Получаем корень дерева XML-структуры
+        with open(file_path, 'rb') as file:          #'rb', так как необходима работа с кодировкой файла
+            tree = parse(file, parser)               # Получаем структуру XML-файла в виде "дерева"
+            root = tree.getroot()                    # Получаем корень дерева XML-структуры
             encoding = tree.docinfo.encoding
 
-        date: str = tree.findtext('./СлЧаст/ОбщСвСч/ИдФайл/ДатаФайл') # Получаем дату из XML-файла
+        date: str = tree.findtext('./СлЧаст/ОбщСвСч/ИдФайл/ДатаФайл')  # Получаем дату из XML-файла
 
         # Получаем данные из необходимых полей XML-файла
-        for i, payer in enumerate(root.findall('./ИнфЧаст/Плательщик'), 1):
+        for i, payer in enumerate(root.findall('./ИнфЧаст/Плательщик'), start=1):
             account = payer.findtext('ЛицСч')
             period = payer.findtext('Период')
             fio = payer.findtext('ФИО', "")        # Для неключевых полей fio, address, amount:
@@ -31,12 +30,12 @@ def parse_xml(file_path, logger):
 
             # Обработка отсутствующих полей ключевых значений
             if not account or not period:
-                issues.append(f"Строка {i}: отсутствуют ключевые поля (ЛицСч, Период).")
+                logger.warning(f"Строка {i}: отсутствуют ключевые поля (ЛицСч, Период).")
                 continue
 
             # Обработка некорректного формата периода
             if not period.isdigit() or len(period) != 6:
-                issues.append(f'Строка {i}: некорректный период "{period}".')
+                logger.warning(f'Строка {i}: некорректный период "{period}".')
                 continue
 
 
@@ -47,7 +46,7 @@ def parse_xml(file_path, logger):
                 if month > 12 or month < 1 or year < 1 or year > datetime.now().year:
                     raise ValueError
             except ValueError:
-                issues.append(f'Строка {i}: некорректный период "{period}". Неверное значение месяца/года.')
+                logger.warning(f'Строка {i}: некорректный период "{period}". Неверное значение месяца/года.')
                 continue
 
 
@@ -57,7 +56,7 @@ def parse_xml(file_path, logger):
                 if amount <= 0:
                     raise ValueError
             except ValueError:
-                issues.append(f'Строка {i}: некорректная сумма (отрицательное или нулевое значение ) - "{amount}".')
+                logger.warning(f'Строка {i}: некорректная сумма (отрицательное или нулевое значение ) - "{amount}".')
                 continue
 
 
@@ -65,7 +64,7 @@ def parse_xml(file_path, logger):
             try:
                 amount = round(float(amount), 2)  # Округление до 2 знаков после разделителя
             except ValueError:
-                issues.append(f'Строка {i}: некорректная сумма (некорректный формат данных) - "{amount}".')
+                logger.warning(f'Строка {i}: некорректная сумма (некорректный формат данных) - "{amount}".')
                 continue
 
 
@@ -84,4 +83,4 @@ def parse_xml(file_path, logger):
     except Exception as error:
         logger.error(f'Ошибка обработки файла {file_path}: {error}')
 
-    return data, encoding, issues
+    return data, encoding

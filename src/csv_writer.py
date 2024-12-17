@@ -31,6 +31,8 @@ def write_csv(data: list[dict], csv_path: str, encoding: str, logger) -> None:
             logger.info(f"Данные были успешно записаны в {os.path.basename(csv_path)}")
 
         logger.info(f"CSV файл сохранен по пути: {csv_path}")
+        logger.info(f'Файл {os.path.basename(csv_path).split('.')[0] + '.xml'} успешно обработан.')
+        print(f'Обработка успешно завершена.')
 
     except Exception as e:
         logging.error(f"Ошибка при создании CSV-файла: {e}")
